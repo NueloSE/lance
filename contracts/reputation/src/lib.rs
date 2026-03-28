@@ -69,7 +69,7 @@ impl ReputationContract {
         caller.require_auth();
 
         // validate score in 1..=5
-        assert!(score >= 1 && score <= 5, "score out of range");
+        assert!((1u32..=5u32).contains(&score), "score out of range");
 
         // ensure job registry is configured
         let registry_addr: Address = env
@@ -107,7 +107,7 @@ impl ReputationContract {
         rep.total_jobs = rep.total_jobs.saturating_add(1);
 
         // compute new averaged score in basis points: avg = total_points / reviews, scaled
-        let avg = (rep.total_points as i32) / (rep.reviews as i32);
+        let avg = rep.total_points / (rep.reviews as i32);
         let bps = avg.saturating_mul(2000); // 1->2000 ... 5->10000
         rep.score = Self::clamp_score(bps);
 
