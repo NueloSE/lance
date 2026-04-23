@@ -2,7 +2,8 @@
 
 use soroban_sdk::BytesN;
 use soroban_sdk::{
-    contract, contractclient, contracterror, contractimpl, contracttype, log, token, Address, Env, Vec,
+    contract, contractclient, contracterror, contractimpl, contracttype, log, token, Address, Env,
+    Vec,
 };
 
 #[contracterror]
@@ -248,7 +249,12 @@ impl EscrowContract {
             .set(&DataKey::AgentJudge, &agent_judge);
 
         // Emit an initialization event for off-chain consumers and logging
-        log!(&env, "Escrow initialized with admin: {} and agent_judge: {}", admin, agent_judge);
+        log!(
+            &env,
+            "Escrow initialized with admin: {} and agent_judge: {}",
+            admin,
+            agent_judge
+        );
         env.events().publish(
             ("escrow", "Initialized"),
             (admin.clone(), agent_judge.clone(), env.ledger().timestamp()),
@@ -382,7 +388,13 @@ impl EscrowContract {
             expires_at,
             milestones: Vec::new(&env),
         };
-        log!(&env, "create_job: id {} client {} freelancer {}", job_id, client, freelancer);
+        log!(
+            &env,
+            "create_job: id {} client {} freelancer {}",
+            job_id,
+            client,
+            freelancer
+        );
         env.storage().persistent().set(&key, &job);
         Self::bump_job_ttl(&env, &key);
     }
@@ -519,7 +531,12 @@ impl EscrowContract {
         job.status.validate_transition(&next_status)?;
         job.status = next_status;
 
-        log!(&env, "release_milestone: job {} amount {}", job_id, milestone.amount);
+        log!(
+            &env,
+            "release_milestone: job {} amount {}",
+            job_id,
+            milestone.amount
+        );
         env.storage().persistent().set(&key, &job);
         Self::bump_job_ttl(&env, &key);
 
@@ -578,10 +595,17 @@ impl EscrowContract {
         } else {
             EscrowStatus::WorkInProgress
         };
-        job.status.validate_transition(&next_status).expect("invalid state transition");
+        job.status
+            .validate_transition(&next_status)
+            .expect("invalid state transition");
         job.status = next_status;
 
-        log!(&env, "release_funds: job {} amount {}", job_id, milestone.amount);
+        log!(
+            &env,
+            "release_funds: job {} amount {}",
+            job_id,
+            milestone.amount
+        );
         env.storage().persistent().set(&key, &job);
         Self::bump_job_ttl(&env, &key);
     }
@@ -731,7 +755,13 @@ impl EscrowContract {
         job.status.validate_transition(&next_status).expect("invalid state transition");
         job.released_amount += total_payout;
         job.status = next_status;
-        log!(&env, "resolve_dispute: job {} payee {} payer {}", job_id, payee_amount, payer_amount);
+        log!(
+            &env,
+            "resolve_dispute: job {} payee {} payer {}",
+            job_id,
+            payee_amount,
+            payer_amount
+        );
         env.storage().persistent().set(&key, &job);
         Self::bump_job_ttl(&env, &key);
     }
