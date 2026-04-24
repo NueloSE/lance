@@ -69,22 +69,7 @@ export default function JobDetailsPage() {
     }
   }
 
-  async function handleAcceptBid(bidId: string) {
-    if (!workspace.job) return;
-    setBusyAction(`accept-${bidId}`);
 
-    try {
-      const acceptedJob = await api.bids.accept(id, bidId, {
-        client_address: workspace.job.client_address,
-      });
-      void workspace.refresh();
-      router.push(`/jobs/${acceptedJob.id}/fund`);
-    } catch {
-      alert("Failed to accept bid");
-    } finally {
-      setBusyAction(null);
-    }
-  }
 
   async function handleSubmitDeliverable(event: React.FormEvent) {
     event.preventDefault();
@@ -329,18 +314,12 @@ export default function JobDetailsPage() {
                   </span>
                 </div>
                 <BidList
+                  job={job}
                   bids={workspace.bids}
                   isClientOwner={
                     Boolean(viewerAddress) &&
                     viewerAddress === workspace.job?.client_address
                   }
-                  jobStatus={job.status}
-                  acceptingBidId={
-                    busyAction?.startsWith("accept-")
-                      ? busyAction.replace("accept-", "")
-                      : null
-                  }
-                  onAccept={handleAcceptBid}
                 />
               </section>
             </div>
@@ -426,219 +405,5 @@ export default function JobDetailsPage() {
                     />
                     <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                       <FileUp className="h-4 w-4 text-amber-600" />
-                      <span>{deliverableFile ? deliverableFile.name : "Upload ZIP, image, JSON, or PDF evidence"}</span>
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={(event) =>
-                          setDeliverableFile(event.target.files?.[0] ?? null)
-                        }
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      disabled={busyAction === "deliverable"}
-                      className="w-full rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
-                    >
-                      {busyAction === "deliverable"
-                        ? "Submitting..."
-                        : "Submit Milestone"}
-                    </button>
-                  </form>
-                ) : null}
-
-                <div className="mt-5 space-y-3">
-                  {workspace.deliverables.length === 0 ? (
-                    <div className="rounded-[1.4rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-                      No milestone evidence has been submitted yet.
-                    </div>
-                  ) : (
-                    workspace.deliverables.map((deliverable) => (
-                      <article
-                        key={deliverable.id}
-                        className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                              Milestone {deliverable.milestone_index}
-                            </p>
-                            <p className="mt-2 text-sm font-medium text-slate-800">
-                              {deliverable.label}
-                            </p>
-                          </div>
-                          <p className="text-xs text-slate-500">
-                            {formatDateTime(deliverable.created_at)}
-                          </p>
-                        </div>
-                        <a
-                          href={deliverable.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-amber-700 underline"
-                        >
-                          Open evidence
-                        </a>
-                      </article>
-                    ))
-                  )}
-                </div>
-              </section>
-            </div>
-          ) : null}
-        </div>
-
-        <aside className="space-y-6">
-          <section className="rounded-[2rem] border border-slate-200 bg-white/85 p-6 shadow-[0_20px_60px_-48px_rgba(15,23,42,0.45)]">
-            <div className="flex items-center gap-3">
-              <Wallet className="h-5 w-5 text-amber-600" />
-              <h2 className="text-lg font-semibold text-slate-950">
-                Connected Viewer
-              </h2>
-            </div>
-            <p className="mt-4 text-sm text-slate-600">
-              {viewerAddress ?? "No wallet connected yet."}
-            </p>
-            {!viewerAddress ? (
-              <button
-                type="button"
-                onClick={() => void ensureViewerAddress()}
-                className="mt-4 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-slate-950"
-              >
-                Connect wallet
-              </button>
-            ) : null}
-          </section>
-
-          <section className="rounded-[2rem] border border-slate-200 bg-white/85 p-6 shadow-[0_20px_60px_-48px_rgba(15,23,42,0.45)]">
-            <h2 className="text-lg font-semibold text-slate-950">
-              Counterparty trust
-            </h2>
-            <div className="mt-5 space-y-4">
-              <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  Client reputation
-                </p>
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <Stars value={workspace.clientReputation?.starRating ?? 2.5} />
-                  <span className="text-sm font-semibold text-slate-800">
-                    {workspace.clientReputation?.averageStars.toFixed(1) ?? "2.5"}
-                  </span>
-                </div>
-                <p className="mt-3 text-xs text-slate-500">
-                  {workspace.clientReputation?.totalJobs ?? 0} completed jobs
-                </p>
-              </div>
-
-              {job.freelancer_address ? (
-                <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Freelancer reputation
-                  </p>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <Stars
-                      value={workspace.freelancerReputation?.starRating ?? 2.5}
-                    />
-                    <span className="text-sm font-semibold text-slate-800">
-                      {workspace.freelancerReputation?.averageStars.toFixed(1) ?? "2.5"}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-xs text-slate-500">
-                    {workspace.freelancerReputation?.totalJobs ?? 0} completed jobs
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          </section>
-
-          {job.status === "awaiting_funding" ? (
-            <section className="rounded-[2rem] border border-amber-200 bg-amber-50 p-6 text-amber-900 shadow-[0_20px_60px_-48px_rgba(245,158,11,0.45)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em]">
-                Next step
-              </p>
-              <h2 className="mt-3 text-xl font-semibold">Fund the escrow</h2>
-              <p className="mt-3 text-sm leading-6">
-                The freelancer is locked in. Deposit funds to transition the contract into active execution.
-              </p>
-              <Link
-                href={`/jobs/${id}/fund`}
-                className="mt-5 inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white"
-              >
-                Open funding review
-              </Link>
-            </section>
-          ) : null}
-
-          {job.status !== "open" && job.status !== "awaiting_funding" ? (
-            <section className="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_20px_60px_-48px_rgba(15,23,42,0.8)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-300">
-                Client control room
-              </p>
-              <h2 className="mt-3 text-xl font-semibold">
-                Awaiting Client Approval
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-300">
-                Approve the latest submitted milestone, or escalate to a dispute if the evidence does not satisfy the brief.
-              </p>
-              <div className="mt-5 space-y-3">
-                <button
-                  type="button"
-                  onClick={handleReleaseFunds}
-                  disabled={
-                    workflowLocked ||
-                    job.status !== "deliverable_submitted" ||
-                    !nextMilestone ||
-                    busyAction === "release"
-                  }
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-emerald-800/50"
-                  id="release-funds"
-                >
-                  {busyAction === "release" ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="h-4 w-4" />
-                  )}
-                  Approve &amp; Release Funds
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenDispute}
-                  disabled={workflowLocked || busyAction === "dispute"}
-                  className="flex w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/8 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/12 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {busyAction === "dispute" ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Gavel className="h-4 w-4" />
-                  )}
-                  Reject &amp; Initiate Dispute
-                </button>
-              </div>
-            </section>
-          ) : null}
-
-          <section className="rounded-[2rem] border border-slate-200 bg-white/85 p-6 shadow-[0_20px_60px_-48px_rgba(15,23,42,0.45)]">
-            <h2 className="text-lg font-semibold text-slate-950">
-              Activity pulse
-            </h2>
-            <div className="mt-5 space-y-4">
-              <div className="flex items-center justify-between rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-3">
-                <span className="text-sm text-slate-600">Next milestone</span>
-                <span className="text-sm font-semibold text-slate-900">
-                  {nextMilestone ? `#${nextMilestone.index}` : "Complete"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-3">
-                <span className="text-sm text-slate-600">Last update</span>
-                <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <Clock3 className="h-4 w-4 text-amber-600" />
-                  {formatDate(job.updated_at)}
-                </span>
-              </div>
-            </div>
-          </section>
-        </aside>
-      </section>
-    </SiteShell>
-  );
-}
+                      <span>{deliverableFile ? deliverableFile.name : "Upload ZIP, image, JSON, or PDF eviden
+(Content truncated due to size limit. Use line ranges to read remaining content)

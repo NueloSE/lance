@@ -261,3 +261,4 @@ export interface UpdateProfileBody {
   bio: string;
   portfolio_links: string[];
 }
+
