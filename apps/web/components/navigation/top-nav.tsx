@@ -20,6 +20,7 @@ import { SessionSwitcher } from "@/components/auth/session-switcher";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { useWalletSession } from "@/hooks/use-wallet-session";
 import { toast } from "@/lib/toast";
+import { ConnectWalletButton } from "@/components/wallet/connect-wallet-button";
 
 function shortAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -200,6 +201,7 @@ export function TopNav({ onOpenSidebar }: { onOpenSidebar?: () => void }) {
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              <ConnectWalletButton />
               <Button
                 variant="ghost"
                 size="sm"
