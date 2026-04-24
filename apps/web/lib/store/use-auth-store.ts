@@ -16,10 +16,16 @@ interface AuthState {
   isLoggedIn: boolean;
   user: AuthUser | null;
   hydrated: boolean;
+  walletAddress: string | null;
+  jwt: string | null;
+  networkMismatch: boolean;
   setHydrated: (value: boolean) => void;
   setRole: (role: UserRole) => void;
   login: (user: AuthUser, role: Exclude<UserRole, "logged-out">) => void;
   logout: () => void;
+  setWalletAddress: (address: string | null) => void;
+  setJwt: (token: string | null) => void;
+  setNetworkMismatch: (mismatch: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
