@@ -27,7 +27,7 @@ export function WalletConnect() {
   const { 
     address, 
     network,
-    status, 
+    status,
     connect, 
     disconnect, 
     isConnected, 
