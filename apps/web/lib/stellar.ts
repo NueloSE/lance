@@ -37,6 +37,7 @@ export type WalletKit = {
   openModal: (options?: WalletModalOptions) => Promise<{ address: string }>;
   closeModal: () => void;
   getAddress: () => Promise<{ address: string }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setNetwork: (network: any) => void;
   signTransaction: (xdr: string) => Promise<string>;
   signMessage: (message: string) => Promise<string>;
@@ -167,7 +168,7 @@ export async function submitTransaction(
         isSeqMismatch =
           response.errorResult.result().switch().name === 'txBadSeq'
       }
-    } catch (_) {
+    } catch {
       // Ignore parsing errors fallback to generic error
     }
 
@@ -252,6 +253,7 @@ async function initializeWalletsKit(): Promise<void> {
 
   // Fixed: Forced cast to resolve version mismatch between stellar-sdk and wallets-kit
   StellarWalletsKit.init({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     network: getNetworkPassphrase() as unknown as any,
     selectedWalletId: "freighter",
     modules: [new FreighterModule(), new AlbedoModule(), new xBullModule()],
