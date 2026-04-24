@@ -144,7 +144,6 @@ export async function buildAndSimulateTransaction({
   try {
     const assembledTx = SorobanRpc.assembleTransaction(
       tx,
-      NETWORK_PASSPHRASE,
       simulation
     ).build();
     return { transaction: assembledTx as Transaction, simulation };
