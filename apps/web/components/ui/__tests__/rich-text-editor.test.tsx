@@ -1,6 +1,6 @@
 import { render, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import RichTextEditor from "@/components/ui/rich-text-editor";
+import RichTextEditor from "../rich-text-editor";
 
 describe("RichTextEditor", () => {
   it("renders and updates content", () => {
