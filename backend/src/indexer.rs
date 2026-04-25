@@ -149,7 +149,7 @@ async fn index_next_ledgers(pool: &PgPool, client: &Client, rpc_url: &str) -> Re
                 processed_any = true;
 
                 // 3b. Process specific event types to update application state
-                if let Err(e) = process_event_side_effects(&mut *tx_pool, event).await {
+                if let Err(e) = process_event_side_effects(&mut tx_pool, event).await {
                     error!("Failed to process event side effects: {:?}", e);
                     // We don't fail the whole transaction here if it's not critical,
                     // but usually we would want this to be atomic.
@@ -183,7 +183,7 @@ async fn index_next_ledgers(pool: &PgPool, client: &Client, rpc_url: &str) -> Re
 }
 
 async fn process_event_side_effects(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    _tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     event: &serde_json::Value,
 ) -> Result<()> {
     let topics = event.get("topic").and_then(|v| v.as_array());

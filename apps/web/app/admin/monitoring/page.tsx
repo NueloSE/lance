@@ -61,12 +61,15 @@ export default function MonitoringDashboard() {
 
   // Update chart data and logs when status changes
   useEffect(() => {
-    if (status) {
+    if (!status) return;
+
+    // Use a small delay to avoid cascading render warnings from synchronous state updates in effect
+    const timeoutId = setTimeout(() => {
       setChartData(prev => {
         const newData = [...prev.slice(1), {
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          throughput: status.in_sync ? 1 : 0, // Simplified for demo
-          latency: status.ledger_lag * 100, // Normalized for visual change
+          throughput: status.in_sync ? 1 : 0, 
+          latency: status.ledger_lag * 100, 
         }];
         return newData;
       });
@@ -74,7 +77,9 @@ export default function MonitoringDashboard() {
       if (status.ledger_lag > status.max_allowed_lag) {
         addLog(`System lagging behind by ${status.ledger_lag} ledgers`, 'warn');
       }
-    }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [status]);
 
   if (isLoading) return (
