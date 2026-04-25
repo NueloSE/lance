@@ -235,3 +235,19 @@ pub struct CastVoteRequest {
     pub freelancer_share_bps: i32,
     pub reasoning: String,
 }
+
+// ── SavedJob ──────────────────────────────────────────────────────────────────
+
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
+pub struct SavedJob {
+    pub id: Uuid,
+    pub job_id: Uuid,
+    pub user_address: String,
+    pub note: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SaveJobRequest {
+    pub note: Option<String>,
+}

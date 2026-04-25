@@ -13,6 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { BidList } from "@/components/jobs/bid-list";
+import { SaveJobButton } from "@/components/jobs/save-job-button";
 import { SiteShell } from "@/components/site-shell";
 import { Stars } from "@/components/stars";
 import { JobDetailsSkeleton } from "@/components/ui/skeleton";
@@ -204,6 +205,9 @@ export default function JobDetailsPage() {
                   <span className="rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white">
                     {job.status}
                   </span>
+                  <div className="ml-auto">
+                    <SaveJobButton jobId={job.id} />
+                  </div>
                 </div>
                 <p className="mt-4 text-sm leading-7 text-slate-600">
                   {job.description}

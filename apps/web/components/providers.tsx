@@ -1,12 +1,16 @@
 "use client";
 
 import { ThemeProvider } from "next-themes";
-import React from "react";
+import React, { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthBootstrap } from "@/components/state/auth-bootstrap";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
-    <ThemeProvider
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider
       attribute="class"
       defaultTheme="system"
       enableSystem
@@ -15,5 +19,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       <AuthBootstrap>{children}</AuthBootstrap>
     </ThemeProvider>
+  </QueryClientProvider>
   );
 }

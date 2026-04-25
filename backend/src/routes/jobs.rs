@@ -1,8 +1,9 @@
 use axum::{
     extract::{Path, State},
-    routing::{get, post},
+    routing::{get, post, delete},
     Json, Router,
 };
+use axum::http::HeaderMap;
 use uuid::Uuid;
 
 use crate::{
@@ -17,6 +18,7 @@ pub fn router() -> Router<AppState> {
         .route("/", get(list_jobs).post(create_job))
         .route("/:id", get(get_job))
         .route("/:id/fund", post(mark_job_funded))
+        .route("/:id/save", post(save_job).delete(unsave_job))
         .route("/:id/bids", get(bids::list_bids).post(bids::create_bid))
         .route("/:id/bids/:bid_id/accept", post(bids::accept_bid))
         .route(
@@ -184,4 +186,49 @@ async fn mark_job_funded(
     }
 
     Ok(Json(job))
+}
+
+async fn save_job(
+    State(state): State<AppState>,
+    Path(job_id): Path<Uuid>,
+    headers: HeaderMap,
+    Json(req): Json<crate::models::SaveJobRequest>,
+) -> Result<Json<crate::models::SavedJob>> {
+    let user_address = headers
+        .get("x-wallet-address")
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| AppError::BadRequest("x-wallet-address header missing".into()))?;
+
+    let saved_job = sqlx::query_as::<_, crate::models::SavedJob>(
+        r#"INSERT INTO saved_jobs (job_id, user_address, note)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (job_id, user_address) DO UPDATE SET note = EXCLUDED.note
+           RETURNING id, job_id, user_address, note, created_at"#
+    )
+    .bind(job_id)
+    .bind(user_address)
+    .bind(req.note)
+    .fetch_one(&state.pool)
+    .await?;
+
+    Ok(Json(saved_job))
+}
+
+async fn unsave_job(
+    State(state): State<AppState>,
+    Path(job_id): Path<Uuid>,
+    headers: HeaderMap,
+) -> Result<Json<()>> {
+    let user_address = headers
+        .get("x-wallet-address")
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| AppError::BadRequest("x-wallet-address header missing".into()))?;
+
+    sqlx::query(r#"DELETE FROM saved_jobs WHERE job_id = $1 AND user_address = $2"#)
+        .bind(job_id)
+        .bind(user_address)
+        .execute(&state.pool)
+        .await?;
+
+    Ok(Json(()))
 }
