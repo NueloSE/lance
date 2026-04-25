@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Wallet } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
+import RichTextEditor from "@/components/ui/rich-text-editor";
+import { z } from "zod";
+import { jobCreateSchema } from "@/lib/validators/job";
 import { api } from "@/lib/api";
 import { connectWallet, getConnectedWalletAddress } from "@/lib/stellar";
 
@@ -34,6 +37,16 @@ export default function NewJobPage() {
 
     try {
       const clientAddress = await ensureWallet().catch(() => walletAddress);
+
+      // Validate with Zod before sending
+      jobCreateSchema.parse({
+        title,
+        description,
+        budget_usdc: budget * 10_000_000,
+        milestones,
+        client_address: clientAddress,
+      });
+
       const job = await api.jobs.create({
         title,
         description,
@@ -80,14 +93,7 @@ export default function NewJobPage() {
               <label className="mb-2 block text-sm font-semibold text-slate-700">
                 Scope
               </label>
-              <textarea
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                className="min-h-[180px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-amber-400"
-                placeholder="Describe requirements, acceptance criteria, and what counts as a complete milestone."
-                required
-                id="job-description"
-              />
+              <RichTextEditor id="job-description" value={description} onChange={setDescription} />
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2">

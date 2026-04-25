@@ -34,8 +34,7 @@ export default function JobDetailsPage() {
 
   const workspace = useLiveJobWorkspace(id);
 
-  const createBidMutation = useCreateBidMutation(id);
-  const acceptBidMutation = useAcceptBidMutation(id);
+  // useLiveJobWorkspace provides data and a `refresh()` helper
   const [viewerAddress, setViewerAddress] = useState<string | null>(null);
   const [proposal, setProposal] = useState("");
   const [deliverableLabel, setDeliverableLabel] = useState("");
@@ -59,10 +58,11 @@ export default function JobDetailsPage() {
     try {
       const freelancerAddress =
         (await getConnectedWalletAddress()) ?? "GD...FREELANCER";
-      await createBidMutation.mutateAsync({
+      await api.bids.create(id, {
         freelancer_address: freelancerAddress,
         proposal,
       });
+      await workspace.refresh();
       setProposal("");
     } catch {
       alert("Failed to submit bid");
@@ -72,10 +72,10 @@ export default function JobDetailsPage() {
   async function handleAcceptBid(bidId: string) {
     if (!workspace.job) return;
     try {
-      const acceptedJob = await acceptBidMutation.mutateAsync({
-        bidId,
-        body: { client_address: workspace.job.client_address },
+      const acceptedJob = await api.bids.accept(id, bidId, {
+        client_address: workspace.job.client_address,
       });
+      await workspace.refresh();
       router.push(`/jobs/${acceptedJob.id}/fund`);
     } catch {
       alert("Failed to accept bid");
