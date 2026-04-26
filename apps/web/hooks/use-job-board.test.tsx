@@ -145,11 +145,7 @@ describe("useJobBoard", () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-  useEffect(() => {
-  startTransition(() => {
-    setPage(1);
-  });
-}, [query, activeTag, sortBy]);
+
       result.current.actions.setPageSize(12);
     });
 
