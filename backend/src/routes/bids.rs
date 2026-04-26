@@ -110,7 +110,7 @@ pub async fn accept_bid(
            VALUES ($1, 'pending', 'accepted', $2, 'Bid accepted by client')"#,
     )
     .bind(bid_id)
-    .bind(req.client_address)
+    .bind(&req.client_address)
     .execute(&mut *tx)
     .await?;
 
@@ -120,7 +120,7 @@ pub async fn accept_bid(
            SELECT id, 'pending', 'rejected', $1, 'Other bid selected'
            FROM bids WHERE job_id = $2 AND id != $3 AND status = 'rejected'"#,
     )
-    .bind(req.client_address)
+    .bind(&req.client_address)
     .bind(job_id)
     .bind(bid_id)
     .execute(&mut *tx)
