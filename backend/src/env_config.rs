@@ -42,7 +42,11 @@ fn snapshot_env_keys() -> HashSet<String> {
     std::env::vars().map(|(key, _)| key).collect()
 }
 
-fn apply_env_file(path: &Path, allow_override_for_loaded_values: bool, initial_env_keys: &HashSet<String>) -> Result<()> {
+fn apply_env_file(
+    path: &Path,
+    allow_override_for_loaded_values: bool,
+    initial_env_keys: &HashSet<String>,
+) -> Result<()> {
     let iter = from_path_iter(path)?;
     for item in iter {
         let (key, value) = item?;
