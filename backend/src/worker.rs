@@ -91,12 +91,8 @@ async fn process_dispute(
             .map_err(|_| anyhow::anyhow!("job {job_id} has invalid negative on_chain_job_id"))?;
 
         Some(
-            s.resolve_dispute(
-                on_chain_job_id,
-                freelancer_amount,
-                client_amount,
-            )
-            .await?,
+            s.resolve_dispute(on_chain_job_id, freelancer_amount, client_amount)
+                .await?,
         )
     } else {
         None

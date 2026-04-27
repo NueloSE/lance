@@ -11,9 +11,9 @@ use ed25519_dalek::{Signer, SigningKey};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::time::Duration;
 use stellar_xdr::curr as sxdr;
 use stellar_xdr::curr::{Limits, ReadXdr, WriteXdr};
-use std::time::Duration;
 
 /// Soroban network passphrase for testnet. Override via `STELLAR_NETWORK_PASSPHRASE`.
 const DEFAULT_NETWORK_PASSPHRASE: &str = "Test SDF Network ; September 2015";
@@ -181,7 +181,11 @@ impl StellarService {
 
     /// Build, simulate, sign, send, and poll — with one retry on sequence
     /// number collision (tx_bad_seq).
-    async fn invoke_contract_with_retry(&self, method: &str, args: &[sxdr::ScVal]) -> Result<String> {
+    async fn invoke_contract_with_retry(
+        &self,
+        method: &str,
+        args: &[sxdr::ScVal],
+    ) -> Result<String> {
         match self.invoke_contract(method, args).await {
             Ok(hash) => Ok(hash),
             Err(e) if is_seq_error(&e) => {
@@ -235,12 +239,18 @@ impl StellarService {
             sim.transaction_data.as_deref(),
             sim.min_resource_fee.as_deref(),
         )?;
-        tracing::debug!(assembled_payload_len = assembled.len(), "soroban transaction assembled");
+        tracing::debug!(
+            assembled_payload_len = assembled.len(),
+            "soroban transaction assembled"
+        );
 
         // 5. Sign the assembled transaction
         let signed = self.sign_envelope(&assembled)?;
         let signed_b64 = B64.encode(&signed);
-        tracing::debug!(signed_payload_len = signed.len(), "soroban transaction signed");
+        tracing::debug!(
+            signed_payload_len = signed.len(),
+            "soroban transaction signed"
+        );
 
         // 6. Submit via sendTransaction
         let send_result = self
@@ -489,9 +499,9 @@ fn scval_symbol(s: &str) -> Result<sxdr::ScVal> {
 
 /// Build a Soroban SCVal string.
 fn scval_string(s: &str) -> Result<sxdr::ScVal> {
-    Ok(sxdr::ScVal::String(sxdr::ScString(sxdr::StringM::try_from(
-        s,
-    )?)))
+    Ok(sxdr::ScVal::String(sxdr::ScString(
+        sxdr::StringM::try_from(s)?,
+    )))
 }
 
 /// Build a Soroban SCVal i32.
@@ -519,7 +529,8 @@ fn scval_i128(v: i128) -> sxdr::ScVal {
 
 /// Decode a Stellar contract ID (C...) into raw 32-byte hash.
 fn decode_contract_id(contract_id: &str) -> Result<[u8; 32]> {
-    let decoded = base32_decode(contract_id).ok_or_else(|| anyhow!("invalid base32 in contract id"))?;
+    let decoded =
+        base32_decode(contract_id).ok_or_else(|| anyhow!("invalid base32 in contract id"))?;
     if decoded.len() != 35 {
         bail!("contract id wrong length: {} (expected 35)", decoded.len());
     }
