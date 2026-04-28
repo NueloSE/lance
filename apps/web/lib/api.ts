@@ -1,17 +1,16 @@
-import { jwtMemory } from "@/lib/store/use-auth-store";
-import type { ReputationMetrics } from "@/lib/reputation";
-
 const API =
   process.env.NEXT_PUBLIC_API_URL ??
   (process.env.NEXT_PUBLIC_E2E === "true" ? "" : "http://localhost:3001");
+import { useAuthStore } from "./store/use-auth-store";
+import type { ReputationMetrics } from "./reputation";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = jwtMemory.get();
-
+  const token = useAuthStore.getState().user?.token;
+  
   const res = await fetch(`${API}/api${path}`, {
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
       ...(init?.headers ?? {}),
     },
     ...init,
@@ -36,9 +35,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   auth: {
     getChallenge: (address: string) =>
-      request<{ token: string }>(`/v1/auth/challenge`, {
+      request<AuthChallengeResponse>(`/v1/auth/challenge`, {
         method: "POST",
         body: JSON.stringify({ address }),
+      }),
+    verify: (address: string, signature: string) =>
+      request<AuthVerifyResponse>(`/v1/auth/verify`, {
+        method: "POST",
+        body: JSON.stringify({ address, signature }),
       }),
   },
   jobs: {
@@ -124,14 +128,48 @@ export const api = {
   users: {
     getProfile: (address: string) =>
       request<PublicProfile>(`/v1/users/${address}/profile`),
-    updateProfile: (address: string, walletAddress: string, body: UpdateProfileBody) =>
+    updateProfile: (address: string, body: UpdateProfileBody) =>
       request<PublicProfile>(`/v1/users/${address}/profile`, {
         method: "PUT",
-        headers: {
-          "x-wallet-address": walletAddress,
-        },
         body: JSON.stringify(body),
       }),
+  },
+};
+
+export const apiAdmin = {
+  indexer: {
+    restart: () =>
+      request<{ ok: boolean; message: string }>("/v1/admin/indexer/restart", {
+        method: "POST",
+      }),
+    rescan: (fromLedger?: number) =>
+      request<{ ok: boolean; rescan_from_ledger: number }>("/v1/admin/indexer/rescan", {
+        method: "POST",
+        body: JSON.stringify({ from_ledger: fromLedger }),
+      }),
+  },
+};
+
+export const apiActivity = {
+  list: ({
+    jobId,
+    userAddress,
+    limit,
+    offset,
+  }: {
+    jobId?: string;
+    userAddress?: string;
+    limit?: number;
+    offset?: number;
+  } = {}) => {
+    const params = new URLSearchParams();
+    if (jobId) params.set("job_id", jobId);
+    if (userAddress) params.set("user_address", userAddress);
+    if (limit !== undefined) params.set("limit", String(limit));
+    if (offset !== undefined) params.set("offset", String(offset));
+
+    const query = params.toString();
+    return request<ActivityLog[]>(`/v1/activity/logs${query ? `?${query}` : ""}`);
   },
 };
 
@@ -327,35 +365,16 @@ export interface ActivityLog {
   job_id?: string | null;
   event_type: string;
   level: string;
-  details: Record<string, unknown>;
+  details: Record<string, unknown> | string | null;
   created_at: string;
 }
 
-export const apiAdmin = {
-  indexer: {
-    rescan: (fromLedger?: number) =>
-      request<{ ok: boolean; rescan_from_ledger?: number; error?: string }>(
-        "/v1/admin/indexer/rescan",
-        { method: "POST", body: JSON.stringify({ from_ledger: fromLedger ?? null }) }
-      ),
-    restart: () =>
-      request<{ ok: boolean; message: string }>("/v1/admin/indexer/restart", {
-        method: "POST",
-        body: "{}",
-      }),
-  },
-};
+export interface AuthChallengeResponse {
+  address: string;
+  challenge: string;
+}
 
-export const apiActivity = {
-  list: (params?: { jobId?: string; userAddress?: string; limit?: number; offset?: number }) => {
-    const qs = new URLSearchParams();
-    if (params?.jobId) qs.set("job_id", params.jobId);
-    if (params?.userAddress) qs.set("user_address", params.userAddress);
-    if (params?.limit) qs.set("limit", String(params.limit));
-    if (params?.offset) qs.set("offset", String(params.offset));
-    const path = `/v1/activity/logs${qs.toString() ? `?${qs.toString()}` : ""}`;
-    return request<ActivityLog[]>(path);
-  },
-  create: (body: { user_address?: string; job_id?: string; event_type: string; level?: string; details?: Record<string, unknown> }) =>
-    request<ActivityLog>(`/v1/activity/logs`, { method: "POST", body: JSON.stringify(body) }),
-};
+export interface AuthVerifyResponse {
+  address: string;
+  token: string;
+}
