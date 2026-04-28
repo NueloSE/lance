@@ -346,7 +346,6 @@ mod tests {
             SorobanRpcClient::new(Client::new(), test_config(format!("http://{address}")));
         let latest_ledger = rpc.get_latest_ledger().await.unwrap();
 
-
         assert_eq!(latest_ledger, 12345);
         assert_eq!(request_count.load(AtomicOrdering::SeqCst), 2);
     }
