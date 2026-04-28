@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -20,12 +21,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans antialiased bg-zinc-950 text-zinc-50`}>
-        <div className="min-h-screen p-4 md:p-8">
-          <main className="mx-auto max-w-7xl">
-            {children}
-          </main>
-        </div>
-        <Toaster position="top-right" expand={false} richColors />
+        <Providers>
+          <div className="min-h-screen p-4 md:p-8">
+            <main className="mx-auto max-w-7xl">
+              {children}
+            </main>
+          </div>
+          <Toaster position="top-right" expand={false} richColors />
+        </Providers>
       </body>
     </html>
   );
