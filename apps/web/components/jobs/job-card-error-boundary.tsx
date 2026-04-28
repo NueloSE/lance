@@ -34,7 +34,7 @@ export class JobCardErrorBoundary extends React.Component<
         <div
           className={cn(
             "rounded-3xl border border-red-500/30 bg-red-500/5 p-6 text-center",
-            className,
+            this.props.className,
           )}
           role="alert"
         >
