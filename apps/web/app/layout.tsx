@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Lance | Stellar Freelance Infrastructure",
   description: "Premium freelance execution with escrow, verifiable reputation, and transparent AI arbitration.",
