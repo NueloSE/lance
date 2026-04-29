@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   FileUp,
   ShieldAlert,
@@ -13,7 +13,7 @@ import { SiteShell } from "@/components/site-shell";
 import { JobDetailsSkeleton } from "@/components/ui/skeleton";
 import { useLiveJobWorkspace } from "@/hooks/use-live-job-workspace";
 import { api } from "@/lib/api";
-import { releaseFunds, openDispute, getEscrowContractId } from "@/lib/contracts";
+import { releaseFunds, getEscrowContractId } from "@/lib/contracts";
 import {
   formatDateTime,
   formatUsdc,

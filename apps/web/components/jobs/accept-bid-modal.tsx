@@ -45,7 +45,7 @@ export function AcceptBidModal({
               Accept Freelancer Bid
             </h3>
             <p id="accept-bid-description" className="mt-2 max-w-2xl text-sm text-zinc-300">
-              Review the freelancer's proposal and budget. Once accepted, you'll need to fund the job.
+              Review the freelancer&apos;s proposal and budget. Once accepted, you&apos;ll need to fund the job.
             </p>
           </div>
         </div>

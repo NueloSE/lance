@@ -386,7 +386,7 @@ export interface ActivityLog {
   job_id?: string;
   event_type: string;
   level: string;
-  details: any;
+  details: Record<string, unknown> | string;
   created_at: string;
 }
 
