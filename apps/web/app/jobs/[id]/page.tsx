@@ -30,7 +30,6 @@ import { useAcceptBid } from "@/hooks/use-accept-bid";
 
 export default function JobDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
 
   const workspace = useLiveJobWorkspace(id);
   const { transaction: acceptTransaction } = useAcceptBid();
@@ -89,21 +88,6 @@ export default function JobDetailsPage() {
       await workspace.refresh();
     } catch {
       alert("Failed to submit deliverable");
-    } finally {
-      setBusyAction(null);
-    }
-  }
-
-  async function handleOpenDispute() {
-    if (!workspace.job) return;
-    setBusyAction("dispute");
-
-    try {
-      await openDispute(BigInt(workspace.job.on_chain_job_id ?? 0));
-      await api.jobs.openDispute(id);
-      await workspace.refresh();
-    } catch {
-      alert("Failed to open dispute");
     } finally {
       setBusyAction(null);
     }
