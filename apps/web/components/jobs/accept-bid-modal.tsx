@@ -1,7 +1,7 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
 import { type Bid, type Job } from "@/lib/api";
+import { formatUsdc, shortenAddress } from "@/lib/format";
 
 interface AcceptBidModalProps {
   isOpen: boolean;
@@ -36,65 +36,75 @@ export function AcceptBidModal({
         className="w-full max-w-2xl rounded-[1.75rem] border border-white/10 bg-zinc-950/95 p-6 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">
-              Review & Accept
-            </p>
-            <h3 id="accept-bid-title" className="mt-2 text-2xl font-semibold text-zinc-50">
+            <h2 id="accept-bid-title" className="text-xl font-semibold text-zinc-50">
               Accept Freelancer Bid
-            </h3>
-            <p id="accept-bid-description" className="mt-2 max-w-2xl text-sm text-zinc-300">
-              Review the freelancer&apos;s proposal and budget. Once accepted, you&apos;ll need to fund the job.
+            </h2>
+            <p id="accept-bid-description" className="mt-2 text-sm text-zinc-400">
+              Review the freelancer&apos;s proposal and accept their bid to start the contract.
             </p>
           </div>
+          <button
+            onClick={onClose}
+            disabled={isPending}
+            className="h-8 w-8 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 disabled:opacity-50"
+            aria-label="Close modal"
+          >
+            ×
+          </button>
         </div>
 
         <div className="mt-6 space-y-4">
-          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-medium text-zinc-100">Freelancer Address</span>
-              <span className="font-mono text-xs text-zinc-400">{bid.freelancer_address}</span>
-            </div>
-            
-            <div className="mb-3">
-              <span className="text-sm font-medium text-zinc-100">Proposal</span>
-              <p className="mt-2 text-sm text-zinc-300 leading-relaxed">{bid.proposal}</p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-zinc-100">Job Budget</span>
-              <span className="text-lg font-semibold text-emerald-400">
-                ${(job.budget_usdc / 10_000_000).toLocaleString()} USDC
-              </span>
+          <div className="rounded-[1.25rem] border border-zinc-800 bg-zinc-900/50 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-zinc-300">Freelancer</p>
+                <p className="mt-1 font-mono text-sm text-zinc-400">
+                  {shortenAddress(bid.freelancer_address)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-zinc-300">Bid Amount</p>
+                <p className="mt-1 text-lg font-semibold text-zinc-100">
+                  {formatUsdc(job.budget_usdc)}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isPending}
-              className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition duration-150 hover:border-zinc-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200 active:translate-y-px disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={onConfirm}
-              disabled={isPending}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition duration-150 hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isPending ? (
-                <>
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                  Accepting...
-                </>
-              ) : (
-                "Confirm & Accept"
-              )}
-            </button>
+          <div className="rounded-[1.25rem] border border-zinc-800 bg-zinc-900/50 p-4">
+            <p className="text-sm font-medium text-zinc-300 mb-2">Proposal</p>
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              {bid.proposal}
+            </p>
           </div>
+
+          <div className="rounded-[1.25rem] border border-amber-500/20 bg-amber-950/20 p-4">
+            <p className="text-sm font-medium text-amber-300 mb-2">Contract Details</p>
+            <div className="space-y-1 text-sm text-amber-200/80">
+              <p>• Contract Value: {formatUsdc(job.budget_usdc)}</p>
+              <p>• Milestones: {job.milestones}</p>
+              <p>• Client: {shortenAddress(job.client_address)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={isPending}
+            className="flex-1 rounded-[1.25rem] border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isPending}
+            className="flex-1 rounded-[1.25rem] bg-amber-500 px-4 py-3 text-sm font-medium text-zinc-950 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending ? "Accepting..." : "Confirm & Accept"}
+          </button>
         </div>
       </section>
     </div>

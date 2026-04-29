@@ -40,6 +40,7 @@ export default function JobDetailsPage() {
   const [deliverableLink, setDeliverableLink] = useState("");
   const [deliverableFile, setDeliverableFile] = useState<File | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [proposal, setProposal] = useState<string | null>(null);
 
   useEffect(() => {
     void getConnectedWalletAddress().then(setViewerAddress);
@@ -51,6 +52,9 @@ export default function JobDetailsPage() {
     setViewerAddress(connected);
     return connected;
   }
+
+  
+
 
   async function handleSubmitDeliverable(event: React.FormEvent) {
     event.preventDefault();
@@ -232,8 +236,9 @@ export default function JobDetailsPage() {
                   </div>
                 </div>
               </div>
-            ) : null}
+            ) : <div> p </div>}
           </div>
+          <section/>
 
           {job.status === "open" ? (
             <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr]">
@@ -328,7 +333,7 @@ export default function JobDetailsPage() {
                     Boolean(viewerAddress) &&
                     viewerAddress === job.client_address
                   }
-                  workflowLocked={workflowLocked}
+                  workflowLocked  ={workflowLocked}
                   busyMilestoneId={
                     busyAction?.startsWith("release-")
                       ? busyAction.replace("release-", "")
@@ -388,13 +393,17 @@ export default function JobDetailsPage() {
                       <FileUp className="h-4 w-4 text-amber-600" />
                       <span>{deliverableFile ? deliverableFile.name : "Upload ZIP, image, JSON, or PDF evidence"}</span>
                     </label>
+                    <input
+                      type="file"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) setDeliverableFile(file);
+                      }}
+                      className="hidden"
+                      id="deliverable-file"
+                    />
                   </form>
-                ) : (
-                  <div className="mt-5 text-center text-slate-500">
-                    <FileUp className="mx-auto h-8 w-8 text-slate-400" />
-                    <p className="mt-2 text-sm">Deliverables are locked during dispute resolution</p>
-                  </div>
-                )}
+                ) : null}
               </section>
             </div>
           ) : null}
