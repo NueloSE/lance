@@ -4,18 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
-  CheckCircle2,
   FileUp,
-  Gavel,
-  LoaderCircle,
   ShieldAlert,
-  Wallet,
 } from "lucide-react";
 import { BidList } from "@/components/jobs/bid-list";
 import { SaveJobButton } from "@/components/jobs/save-job-button";
 import { SiteShell } from "@/components/site-shell";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Stars } from "@/components/stars";
 import { JobDetailsSkeleton } from "@/components/ui/skeleton";
 import { useLiveJobWorkspace } from "@/hooks/use-live-job-workspace";
 import { api } from "@/lib/api";
@@ -27,9 +21,9 @@ import {
 } from "@/lib/format";
 import { connectWallet, getConnectedWalletAddress } from "@/lib/stellar";
 
-import { ActivityLogList } from "@/components/activity-log";
 import { TransactionPipeline } from "@/components/blockchain/transaction-pipeline";
 import { MilestoneTracker } from "@/components/jobs/milestone-tracker";
+import { SubmitBidErrorBoundary, SubmitBidModal } from "@/components/jobs/submit-bid-modal";
 import { useAcceptBid } from "@/hooks/use-accept-bid";
 
 
@@ -38,7 +32,7 @@ export default function JobDetailsPage() {
   const router = useRouter();
 
   const workspace = useLiveJobWorkspace(id);
-  const { accept, transaction: acceptTransaction } = useAcceptBid();
+  const { transaction: acceptTransaction } = useAcceptBid();
 
   // useLiveJobWorkspace provides data and a `refresh()` helper
   const [viewerAddress, setViewerAddress] = useState<string | null>(null);
@@ -57,28 +51,6 @@ export default function JobDetailsPage() {
     setViewerAddress(connected);
     return connected;
   }
-
-  async function handleBid(event: React.FormEvent) {
-    event.preventDefault();
-    setBusyAction("bid");
-
-    try {
-      const freelancerAddress =
-        (await getConnectedWalletAddress()) ?? "GD...FREELANCER";
-      await api.bids.create(id, {
-        freelancer_address: freelancerAddress,
-        proposal,
-      });
-      setProposal("");
-      await workspace.refresh();
-    } catch {
-      alert("Failed to submit bid");
-    } finally {
-      setBusyAction(null);
-    }
-  }
-
-
 
   async function handleSubmitDeliverable(event: React.FormEvent) {
     event.preventDefault();
@@ -121,38 +93,14 @@ export default function JobDetailsPage() {
     }
   }
 
-  async function handleReleaseFunds() {
-    if (!workspace.job) return;
-    const nextMilestone = workspace.milestones.find(
-      (milestone) => milestone.status === "pending",
-    );
-    if (!nextMilestone) return;
-
-    setBusyAction("release");
-
-    try {
-      await releaseFunds(
-        BigInt(workspace.job.on_chain_job_id ?? 0),
-        Math.max(0, nextMilestone.index - 1),
-      );
-      await api.jobs.releaseMilestone(id, nextMilestone.id);
-      await workspace.refresh();
-    } catch {
-      alert("Failed to release milestone");
-    } finally {
-      setBusyAction(null);
-    }
-  }
-
   async function handleOpenDispute() {
     if (!workspace.job) return;
     setBusyAction("dispute");
 
     try {
-      const actor = (await ensureViewerAddress()) ?? workspace.job.client_address;
       await openDispute(BigInt(workspace.job.on_chain_job_id ?? 0));
-      const dispute = await api.jobs.dispute.open(id, { opened_by: actor });
-      router.push(`/jobs/${id}/dispute?disputeId=${dispute.id}`);
+      await api.jobs.openDispute(id);
+      await workspace.refresh();
     } catch {
       alert("Failed to open dispute");
     } finally {
@@ -187,9 +135,6 @@ export default function JobDetailsPage() {
   }
 
   const job = workspace.job;
-  const nextMilestone = workspace.milestones.find(
-    (milestone) => milestone.status === "pending",
-  );
   const viewerBid = viewerAddress
     ? workspace.bids.find(
         (bid) =>
