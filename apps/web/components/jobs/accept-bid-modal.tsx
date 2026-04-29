@@ -1,99 +1,112 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
-import { AcceptBidModal } from "./accept-bid-modal";
+"use client";
+
 import { type Bid, type Job } from "@/lib/api";
+import { formatUsdc, shortenAddress } from "@/lib/format";
 
-const mockBid: Bid = {
-  id: "bid-1",
-  job_id: "job-1",
-  freelancer_address: "GD...FREELANCER",
-  proposal: "I can do this job perfectly.",
-  status: "pending",
-  created_at: new Date().toISOString(),
-};
+interface AcceptBidModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  bid: Bid | null;
+  job: Job;
+  isPending: boolean;
+}
 
-const mockJob: Job = {
-  id: "job-1",
-  title: "Test Job",
-  description: "Test Description",
-  budget_usdc: 1000 * 10_000_000, // 1000 USDC in micro units
-  milestones: 3,
-  client_address: "GD...CLIENT",
-  status: "open",
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
+export function AcceptBidModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  bid,
+  job,
+  isPending,
+}: AcceptBidModalProps) {
+  if (!isOpen || !bid) return null;
 
-describe("AcceptBidModal", () => {
-  it("renders correctly when open", () => {
-    render(
-      <AcceptBidModal
-        isOpen={true}
-        onClose={vi.fn()}
-        onConfirm={vi.fn()}
-        bid={mockBid}
-        job={mockJob}
-        isPending={false}
-      />
-    );
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/80 p-4 backdrop-blur-sm sm:items-center"
+      role="presentation"
+      onClick={onClose}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="accept-bid-title"
+        aria-describedby="accept-bid-description"
+        className="w-full max-w-2xl rounded-[1.75rem] border border-white/10 bg-zinc-950/95 p-6 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 id="accept-bid-title" className="text-xl font-semibold text-zinc-50">
+              Accept Freelancer Bid
+            </h2>
+            <p id="accept-bid-description" className="mt-2 text-sm text-zinc-400">
+              Review the freelancer's proposal and accept their bid to start the contract.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={isPending}
+            className="h-8 w-8 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 disabled:opacity-50"
+            aria-label="Close modal"
+          >
+            ×
+          </button>
+        </div>
 
-    expect(screen.getByText(/Accept Freelancer Bid/i)).toBeDefined();
-    expect(screen.getByText(/GD/i)).toBeDefined();
-    expect(screen.getByText(/1,000/i)).toBeDefined();
-    expect(screen.getByText(/perfectly/i)).toBeDefined();
-  });
+        <div className="mt-6 space-y-4">
+          <div className="rounded-[1.25rem] border border-zinc-800 bg-zinc-900/50 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-zinc-300">Freelancer</p>
+                <p className="mt-1 font-mono text-sm text-zinc-400">
+                  {shortenAddress(bid.freelancer_address)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-zinc-300">Bid Amount</p>
+                <p className="mt-1 text-lg font-semibold text-zinc-100">
+                  {formatUsdc(job.budget_usdc)}
+                </p>
+              </div>
+            </div>
+          </div>
 
-  it("calls onConfirm when clicking the confirm button", () => {
-    const onConfirm = vi.fn();
-    render(
-      <AcceptBidModal
-        isOpen={true}
-        onClose={vi.fn()}
-        onConfirm={onConfirm}
-        bid={mockBid}
-        job={mockJob}
-        isPending={false}
-      />
-    );
+          <div className="rounded-[1.25rem] border border-zinc-800 bg-zinc-900/50 p-4">
+            <p className="text-sm font-medium text-zinc-300 mb-2">Proposal</p>
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              {bid.proposal}
+            </p>
+          </div>
 
-    const confirmButton = screen.getByRole("button", { name: /Confirm & Accept/i });
-    fireEvent.click(confirmButton);
-    expect(onConfirm).toHaveBeenCalledTimes(1);
-  });
+          <div className="rounded-[1.25rem] border border-amber-500/20 bg-amber-950/20 p-4">
+            <p className="text-sm font-medium text-amber-300 mb-2">Contract Details</p>
+            <div className="space-y-1 text-sm text-amber-200/80">
+              <p>• Contract Value: {formatUsdc(job.budget_usdc)}</p>
+              <p>• Milestones: {job.milestones}</p>
+              <p>• Client: {shortenAddress(job.client_address)}</p>
+            </div>
+          </div>
+        </div>
 
-  it("calls onClose when clicking the cancel button", () => {
-    const onClose = vi.fn();
-    render(
-      <AcceptBidModal
-        isOpen={true}
-        onClose={onClose}
-        onConfirm={vi.fn()}
-        bid={mockBid}
-        job={mockJob}
-        isPending={false}
-      />
-    );
-
-    const cancelButton = screen.getByRole("button", { name: /Cancel/i });
-    fireEvent.click(cancelButton);
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it("shows loading state when isPending is true", () => {
-    render(
-      <AcceptBidModal
-        isOpen={true}
-        onClose={vi.fn()}
-        onConfirm={vi.fn()}
-        bid={mockBid}
-        job={mockJob}
-        isPending={true}
-      />
-    );
-
-    const acceptButton = screen.getByRole("button", { name: /Accepting.../i });
-    expect(acceptButton).toBeDefined();
-    expect(acceptButton).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Cancel/i })).toBeDisabled();
-  });
-});
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={isPending}
+            className="flex-1 rounded-[1.25rem] border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isPending}
+            className="flex-1 rounded-[1.25rem] bg-amber-500 px-4 py-3 text-sm font-medium text-zinc-950 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending ? "Accepting..." : "Confirm & Accept"}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
