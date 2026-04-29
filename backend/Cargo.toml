@@ -7,6 +7,10 @@ edition = "2021"
 name = "backend"
 path = "src/main.rs"
 
+[[bin]]
+name = "worker"
+path = "src/bin/worker.rs"
+
 [dependencies]
 tokio              = { workspace = true }
 axum               = { workspace = true }
@@ -31,10 +35,9 @@ jsonwebtoken       = "9"
 rand               = "0.8"
 dashmap            = "6"
 hex                = "0.4"
-
-# Rate limiting
 governor           = { version = "0.6", features = ["std"] }
 futures-util       = "0.3"
+stellar-xdr        = { workspace = true }
 
 [dev-dependencies]
 axum-test = "16.0"

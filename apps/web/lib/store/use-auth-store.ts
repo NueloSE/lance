@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type UserRole = "logged-out" | "client" | "freelancer";
 
@@ -6,6 +7,8 @@ export interface AuthUser {
   name: string;
   email: string;
   avatar?: string;
+  address?: string;
+  token?: string;
 }
 
 interface AuthState {
@@ -40,87 +43,6 @@ interface AuthState {
   isJwtValid: () => boolean;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  role: "logged-out",
-  isLoggedIn: false,
-  user: null,
-  hydrated: false,
-  walletAddress: null,
-  jwt: null,
-  expiresAt: null,
-  networkMismatch: false,
-
-  setHydrated: (value) => set({ hydrated: value }),
-
-  setRole: (role) =>
-    set((state) => ({
-      role,
-      isLoggedIn: role !== "logged-out",
-      user:
-        role !== "logged-out"
-          ? (state.user ?? {
-              name: role === "client" ? "Client" : "Freelancer",
-              email: role === "client" ? "client@lance.so" : "freelancer@lance.so",
-            })
-          : null,
-    })),
-
-  login: (user, role) => set({ user, role, isLoggedIn: true }),
-
-  logout: () =>
-    set({
-      role: "logged-out",
-      isLoggedIn: false,
-      user: null,
-      walletAddress: null,
-      jwt: null,
-      expiresAt: null,
-      networkMismatch: false,
-    }),
-
-  setWalletAddress: (address) => set({ walletAddress: address }),
-
-  setJwt: (token) => {
-    jwtMemory.set(token);
-    set({ jwt: token });
-  },
-
-  setNetworkMismatch: (mismatch) => set({ networkMismatch: mismatch }),
-
-  walletLogin: (address, jwt, expiresAt, role) => {
-    jwtMemory.set(jwt);
-    set({
-      walletAddress: address,
-      jwt,
-      expiresAt,
-      isLoggedIn: true,
-      role,
-      user: {
-        name: `${address.slice(0, 4)}…${address.slice(-4)}`,
-        email: `${address.slice(0, 8).toLowerCase()}@stellar`,
-      },
-    });
-  },
-
-  walletLogout: () => {
-    jwtMemory.clear();
-    set({
-      walletAddress: null,
-      jwt: null,
-      expiresAt: null,
-      isLoggedIn: false,
-      role: "logged-out",
-      user: null,
-    });
-  },
-
-  isJwtValid: () => {
-    const { jwt, expiresAt } = get();
-    if (!jwt || !expiresAt) return false;
-    return Date.now() < expiresAt - 30_000;
-  },
-}));
-
 // In-memory JWT accessor — used by the API interceptor without React
 let _jwt: string | null = null;
 export const jwtMemory = {
@@ -132,3 +54,100 @@ export const jwtMemory = {
     _jwt = null;
   },
 };
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      role: "logged-out",
+      isLoggedIn: false,
+      user: null,
+      hydrated: false,
+      walletAddress: null,
+      jwt: null,
+      expiresAt: null,
+      networkMismatch: false,
+
+      setHydrated: (value) => set({ hydrated: value }),
+
+      setRole: (role) =>
+        set((state) => ({
+          role,
+          isLoggedIn: role !== "logged-out",
+          user:
+            role !== "logged-out"
+              ? (state.user ?? {
+                  name: role === "client" ? "Client" : "Freelancer",
+                  email: role === "client" ? "client@lance.so" : "freelancer@lance.so",
+                })
+              : null,
+        })),
+
+      login: (user, role) =>
+        set({
+          isLoggedIn: true,
+          user,
+          role,
+          walletAddress: user.address ?? null,
+          jwt: user.token ?? null,
+        }),
+
+      logout: () =>
+        set({
+          role: "logged-out",
+          isLoggedIn: false,
+          user: null,
+          walletAddress: null,
+          jwt: null,
+          networkMismatch: false,
+        }),
+
+      setWalletAddress: (address) => set({ walletAddress: address }),
+
+      setJwt: (token) => {
+        jwtMemory.set(token);
+        set({ jwt: token });
+      },
+
+      setNetworkMismatch: (mismatch) => set({ networkMismatch: mismatch }),
+
+      walletLogin: (address, jwt, expiresAt, role) => {
+        jwtMemory.set(jwt);
+        set({
+          walletAddress: address,
+          jwt,
+          expiresAt,
+          isLoggedIn: true,
+          role,
+          user: {
+            name: `${address.slice(0, 4)}…${address.slice(-4)}`,
+            email: `${address.slice(0, 8).toLowerCase()}@stellar`,
+          },
+        });
+      },
+
+      walletLogout: () => {
+        jwtMemory.clear();
+        set({
+          walletAddress: null,
+          jwt: null,
+          expiresAt: null,
+          isLoggedIn: false,
+          role: "logged-out",
+          user: null,
+        });
+      },
+
+      isJwtValid: () => {
+        const { jwt, expiresAt } = get();
+        if (!jwt || !expiresAt) return false;
+        return Date.now() < expiresAt - 30_000;
+      },
+    }),
+    {
+      name: "lance-auth-session",
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated(true);
+      },
+    }
+  )
+);
