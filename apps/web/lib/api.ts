@@ -390,3 +390,13 @@ export interface ActivityLog {
   created_at: string;
 }
 
+export interface AuthChallengeResponse {
+  address: string;
+  challenge: string;
+}
+
+export interface AuthVerifyResponse {
+  address: string;
+  token: string;
+}
+
