@@ -1,99 +1,102 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
-import { AcceptBidModal } from "./accept-bid-modal";
+"use client";
+
+import { LoaderCircle } from "lucide-react";
 import { type Bid, type Job } from "@/lib/api";
 
-const mockBid: Bid = {
-  id: "bid-1",
-  job_id: "job-1",
-  freelancer_address: "GD...FREELANCER",
-  proposal: "I can do this job perfectly.",
-  status: "pending",
-  created_at: new Date().toISOString(),
-};
+interface AcceptBidModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  bid: Bid | null;
+  job: Job;
+  isPending: boolean;
+}
 
-const mockJob: Job = {
-  id: "job-1",
-  title: "Test Job",
-  description: "Test Description",
-  budget_usdc: 1000 * 10_000_000, // 1000 USDC in micro units
-  milestones: 3,
-  client_address: "GD...CLIENT",
-  status: "open",
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
+export function AcceptBidModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  bid,
+  job,
+  isPending,
+}: AcceptBidModalProps) {
+  if (!isOpen || !bid) return null;
 
-describe("AcceptBidModal", () => {
-  it("renders correctly when open", () => {
-    render(
-      <AcceptBidModal
-        isOpen={true}
-        onClose={vi.fn()}
-        onConfirm={vi.fn()}
-        bid={mockBid}
-        job={mockJob}
-        isPending={false}
-      />
-    );
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/80 p-4 backdrop-blur-sm sm:items-center"
+      role="presentation"
+      onClick={onClose}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="accept-bid-title"
+        aria-describedby="accept-bid-description"
+        className="w-full max-w-2xl rounded-[1.75rem] border border-white/10 bg-zinc-950/95 p-6 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">
+              Review & Accept
+            </p>
+            <h3 id="accept-bid-title" className="mt-2 text-2xl font-semibold text-zinc-50">
+              Accept Freelancer Bid
+            </h3>
+            <p id="accept-bid-description" className="mt-2 max-w-2xl text-sm text-zinc-300">
+              Review the freelancer's proposal and budget. Once accepted, you'll need to fund the job.
+            </p>
+          </div>
+        </div>
 
-    expect(screen.getByText(/Accept Freelancer Bid/i)).toBeDefined();
-    expect(screen.getByText(/GD/i)).toBeDefined();
-    expect(screen.getByText(/1,000/i)).toBeDefined();
-    expect(screen.getByText(/perfectly/i)).toBeDefined();
-  });
+        <div className="mt-6 space-y-4">
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-medium text-zinc-100">Freelancer Address</span>
+              <span className="font-mono text-xs text-zinc-400">{bid.freelancer_address}</span>
+            </div>
+            
+            <div className="mb-3">
+              <span className="text-sm font-medium text-zinc-100">Proposal</span>
+              <p className="mt-2 text-sm text-zinc-300 leading-relaxed">{bid.proposal}</p>
+            </div>
 
-  it("calls onConfirm when clicking the confirm button", () => {
-    const onConfirm = vi.fn();
-    render(
-      <AcceptBidModal
-        isOpen={true}
-        onClose={vi.fn()}
-        onConfirm={onConfirm}
-        bid={mockBid}
-        job={mockJob}
-        isPending={false}
-      />
-    );
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-zinc-100">Job Budget</span>
+              <span className="text-lg font-semibold text-emerald-400">
+                ${(job.budget_usdc / 10_000_000).toLocaleString()} USDC
+              </span>
+            </div>
+          </div>
 
-    const confirmButton = screen.getByRole("button", { name: /Confirm & Accept/i });
-    fireEvent.click(confirmButton);
-    expect(onConfirm).toHaveBeenCalledTimes(1);
-  });
-
-  it("calls onClose when clicking the cancel button", () => {
-    const onClose = vi.fn();
-    render(
-      <AcceptBidModal
-        isOpen={true}
-        onClose={onClose}
-        onConfirm={vi.fn()}
-        bid={mockBid}
-        job={mockJob}
-        isPending={false}
-      />
-    );
-
-    const cancelButton = screen.getByRole("button", { name: /Cancel/i });
-    fireEvent.click(cancelButton);
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it("shows loading state when isPending is true", () => {
-    render(
-      <AcceptBidModal
-        isOpen={true}
-        onClose={vi.fn()}
-        onConfirm={vi.fn()}
-        bid={mockBid}
-        job={mockJob}
-        isPending={true}
-      />
-    );
-
-    const acceptButton = screen.getByRole("button", { name: /Accepting.../i });
-    expect(acceptButton).toBeDefined();
-    expect(acceptButton).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Cancel/i })).toBeDisabled();
-  });
-});
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isPending}
+              className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition duration-150 hover:border-zinc-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200 active:translate-y-px disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={isPending}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition duration-150 hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Accepting...
+                </>
+              ) : (
+                "Confirm & Accept"
+              )}
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

@@ -3,7 +3,7 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiActivity } from "@/lib/api";
-import type { Activity } from "@/lib/api";
+import type { ActivityLog } from "@/lib/api";
 import { CheckCircle2, Clock, AlertCircle, Info, LucideIcon } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";

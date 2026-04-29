@@ -380,3 +380,13 @@ export interface SavedJob {
   created_at: string;
 }
 
+export interface ActivityLog {
+  id: string;
+  user_address?: string;
+  job_id?: string;
+  event_type: string;
+  level: string;
+  details: any;
+  created_at: string;
+}
+
