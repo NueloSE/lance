@@ -205,4 +205,3 @@ async fn get_saved_jobs(
 
     Ok(Json(jobs))
 }
-
