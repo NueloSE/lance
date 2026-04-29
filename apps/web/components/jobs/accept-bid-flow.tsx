@@ -86,5 +86,3 @@ export function AcceptBidFlow({
     </>
   );
 }
-
-export { AcceptBidFlow };
