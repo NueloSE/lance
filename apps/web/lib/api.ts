@@ -224,6 +224,17 @@ export interface JobMetadata {
   estimated_duration_days?: number | null;
 }
 
+export interface AuthChallengeResponse {
+  challenge: string;
+  expires_at: string;
+}
+
+export interface AuthVerifyResponse {
+  token: string;
+  expires_at: string;
+  user_address: string;
+}
+
 export interface MetadataUploadResponse {
   cid: string;
   metadata_hash: string;
