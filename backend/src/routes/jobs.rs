@@ -11,7 +11,7 @@ use crate::{
     error::{AppError, Result},
     models::{CreateJobRequest, Job, MarkJobFundedRequest},
     routes::{bids, deliverables, milestones},
-    services::metadata::{store_bid_metadata, retrieve_bid_metadata},
+    services::metadata::{retrieve_bid_metadata, store_bid_metadata},
 };
 
 pub fn router() -> Router<AppState> {
