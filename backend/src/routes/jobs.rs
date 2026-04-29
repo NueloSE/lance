@@ -11,7 +11,6 @@ use crate::{
     error::{AppError, Result},
     models::{CreateJobRequest, Job, MarkJobFundedRequest},
     routes::{bids, deliverables, milestones},
-    services::metadata::{retrieve_bid_metadata, store_bid_metadata},
 };
 
 pub fn router() -> Router<AppState> {
@@ -22,10 +21,6 @@ pub fn router() -> Router<AppState> {
         .route("/:id/save", post(save_job).delete(unsave_job))
         .route("/:id/bids", get(bids::list_bids).post(bids::create_bid))
         .route("/:id/bids/:bid_id/accept", post(bids::accept_bid))
-        .route(
-            "/:id/bids/:bid_id/metadata",
-            post(store_bid_metadata).get(retrieve_bid_metadata),
-        )
         .route(
             "/:id/deliverables",
             get(deliverables::list_deliverables).post(deliverables::submit_deliverable),

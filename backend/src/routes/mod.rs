@@ -16,7 +16,7 @@ pub mod verdicts;
 use crate::db::AppState;
 use axum::{routing::get, Router};
 
-pub fn api_router(state: AppState) -> Router<AppState> {
+pub fn api_router(_state: AppState) -> Router<AppState> {
     Router::new()
         // health checks — outside versioned prefix so load balancers can reach them
         .route("/health/live", get(health::liveness))
